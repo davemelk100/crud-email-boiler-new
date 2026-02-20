@@ -9,6 +9,7 @@ import Dashboard from "@/views/Dashboard.vue";
 import Contact from "@/views/Contact.vue";
 import Setup from "@/views/Setup.vue";
 import Chat from "@/views/Chat.vue";
+import Reports from "@/views/Reports.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -30,6 +31,7 @@ const router = createRouter({
     },
     { path: "/contact", name: "Contact", component: Contact },
     { path: "/setup", name: "Setup", component: Setup },
+    { path: "/reports", name: "Reports", component: Reports },
   ],
 });
 
