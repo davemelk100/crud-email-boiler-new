@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppNav from "@/components/AppNav.vue";
 import SocialShare from "@/components/SocialShare.vue";
+import ScrollToTop from "@/components/ScrollToTop.vue";
 </script>
 
 <template>
@@ -10,6 +11,7 @@ import SocialShare from "@/components/SocialShare.vue";
     <router-view />
   </main>
   <SocialShare />
+  <ScrollToTop />
 </template>
 
 <style>
@@ -48,6 +50,7 @@ body {
 @media (max-width: 640px) {
   .container {
     margin: 1.5rem auto;
+    padding-top: 2.5rem;
     padding-bottom: 4rem;
   }
   .social-share {

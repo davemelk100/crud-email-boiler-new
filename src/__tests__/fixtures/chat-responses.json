@@ -1,0 +1,16 @@
+{
+  "responses": [
+    {
+      "message": "Hello",
+      "response": "Hi there! This is a demo chat interface. No actual AI API key is integrated — responses are served from local sample data to showcase the streaming UI and chat functionality."
+    },
+    {
+      "message": "What can you do?",
+      "response": "This is a demo-only chat feature. In a production environment, you would connect an AI provider (OpenAI or Anthropic) via Supabase Edge Functions. Currently, no AI token is configured — this interface demonstrates the chat UX, threading, and streaming patterns."
+    },
+    {
+      "message": "default",
+      "response": "Thanks for trying the chat demo! This response is served from a local JSON fixture. To enable real AI responses, configure AI_PROVIDER, AI_MODEL, and the corresponding API key in your Supabase Edge Function secrets."
+    }
+  ]
+}
