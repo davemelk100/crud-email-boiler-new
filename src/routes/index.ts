@@ -7,6 +7,7 @@ import SignUp from "@/views/SignUp.vue";
 import ForgotPassword from "@/views/ForgotPassword.vue";
 import Dashboard from "@/views/Dashboard.vue";
 import Contact from "@/views/Contact.vue";
+import Setup from "@/views/Setup.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +23,7 @@ const router = createRouter({
       beforeEnter: authGuard,
     },
     { path: "/contact", name: "Contact", component: Contact },
+    { path: "/setup", name: "Setup", component: Setup },
   ],
 });
 

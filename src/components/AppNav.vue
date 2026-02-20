@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();
+
+const userInitial = computed(() => {
+  const email = auth.user?.email;
+  return email ? email.charAt(0).toUpperCase() : "?";
+});
+
+const userEmail = computed(() => auth.user?.email ?? "");
 
 async function handleSignOut() {
   await auth.signOut();
@@ -17,17 +25,22 @@ async function handleSignOut() {
       <router-link to="/" class="brand">CrudEmail</router-link>
 
       <div class="links">
-        <router-link to="/">Home</router-link>
+        <router-link to="/setup">Readme</router-link>
         <router-link to="/contact">Contact</router-link>
 
         <template v-if="auth.isAuthenticated">
           <router-link to="/dashboard">Dashboard</router-link>
-          <button class="link-btn" @click="handleSignOut">Sign Out</button>
         </template>
-        <template v-else>
-          <router-link to="/signin">Sign In</router-link>
-          <router-link to="/signup">Sign Up</router-link>
-        </template>
+
+        <div class="right-links">
+          <template v-if="auth.isAuthenticated">
+            <span class="avatar" :title="userEmail">{{ userInitial }}</span>
+            <button class="link-btn" @click="handleSignOut">Sign Out</button>
+          </template>
+          <template v-else>
+            <router-link to="/signin">Sign In</router-link>
+          </template>
+        </div>
       </div>
     </div>
   </nav>
@@ -54,8 +67,10 @@ async function handleSignOut() {
 }
 .links {
   display: flex;
+  flex: 1;
   gap: 1rem;
   align-items: center;
+  margin-left: 1.5rem;
 }
 .links a {
   text-decoration: none;
@@ -75,6 +90,33 @@ async function handleSignOut() {
 }
 .link-btn:hover {
   color: #1a1a1a;
+}
+.right-links {
+  margin-left: auto;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.icon-link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.icon-label {
+  font-size: 0.85rem;
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: default;
 }
 
 @media (max-width: 640px) {
@@ -97,8 +139,18 @@ async function handleSignOut() {
     justify-content: center;
   }
   .links {
-    gap: 1.25rem;
+    justify-content: space-evenly;
     font-size: 0.85rem;
+    margin-left: 0;
+    gap: 0;
+  }
+  .right-links {
+    margin-left: 0;
+    gap: 0;
+    justify-content: space-evenly;
+  }
+  .icon-link svg {
+    display: none;
   }
 }
 </style>

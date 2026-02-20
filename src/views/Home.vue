@@ -1,35 +1,36 @@
 <template>
   <div class="home">
     <h1>CRUD Email Boiler</h1>
-    <p class="subtitle">A production-ready starter app for building authenticated web applications with a built-in contact form.</p>
+    <p class="subtitle">Ship authenticated apps fast. Auth, email, and a GraphQL-ready data layer — all wired up so you can focus on your product.</p>
 
     <section>
-      <h2>What It Does</h2>
+      <h2>What You Get</h2>
       <ul>
-        <li>User authentication with email/password, magic links, and OAuth (Google, GitHub, Apple, Azure)</li>
-        <li>Protected routes with automatic session management</li>
-        <li>Contact form that sends emails via Resend, with rate limiting, honeypot spam protection, and input validation</li>
-        <li>GraphQL client wired up and ready for your data layer</li>
+        <li>Email/password, magic link, and OAuth sign-in out of the box</li>
+        <li>Protected routes with automatic session handling</li>
+        <li>Contact form with Resend delivery, rate limiting, and spam protection</li>
+        <li>GraphQL client ready for your data layer</li>
       </ul>
     </section>
 
     <section>
-      <h2>How It's Built</h2>
+      <h2>Built With</h2>
       <ul>
-        <li><strong>Vue 3</strong> with Composition API and <code>&lt;script setup&gt;</code></li>
-        <li><strong>TypeScript</strong> for type safety across the entire codebase</li>
-        <li><strong>Vite</strong> for fast dev server and optimized production builds</li>
-        <li><strong>Pinia</strong> for state management (auth store)</li>
-        <li><strong>Vue Router</strong> with navigation guards for protected pages</li>
-        <li><strong>Supabase</strong> for authentication, Postgres database, and serverless edge functions</li>
-        <li><strong>Resend</strong> for transactional email delivery</li>
-        <li><strong>Netlify</strong> for static site deployment</li>
+        <li><strong>Vue 3</strong> + TypeScript + Vite</li>
+        <li><strong>Pinia</strong> for state, <strong>Vue Router</strong> for navigation guards</li>
+        <li><strong>Supabase</strong> for auth, Postgres, and edge functions</li>
+        <li><strong>Resend</strong> for transactional email</li>
+        <li><strong>Netlify</strong> for static deployment</li>
       </ul>
     </section>
 
     <section>
       <h2>Get Started</h2>
-      <p><router-link to="/signup">Create an account</router-link> to access the dashboard, or <router-link to="/contact">send a message</router-link> to try the contact form.</p>
+      <p>
+        <router-link to="/signup">Create an account</router-link> to explore the dashboard,
+        <router-link to="/contact">send a message</router-link> to try the contact form, or
+        read the <router-link to="/setup">setup guide</router-link> to run it yourself.
+      </p>
     </section>
   </div>
 </template>
