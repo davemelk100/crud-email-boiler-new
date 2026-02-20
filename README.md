@@ -65,7 +65,20 @@ netlify --version
 
 ---
 
-## Local Development
+## Quick Start
+
+```bash
+git clone <your-repo-url>
+cd crud-email-boiler
+npm install
+npm run dev
+```
+
+The Vite dev server will start at **http://localhost:5173** (or the next available port if 5173 is in use).
+
+---
+
+## Local Development (Full Stack)
 
 ### 1. Clone & install
 
