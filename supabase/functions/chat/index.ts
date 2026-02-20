@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=deno";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +39,7 @@ serve(async (req) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
+  try {
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
   if (isRateLimited(ip)) {
     return json({ error: "Too many requests" }, 429);
@@ -61,6 +62,7 @@ serve(async (req) => {
   } = await supabase.auth.getUser(token);
 
   if (authError || !user) {
+    console.error("Auth error:", authError);
     return json({ error: "Unauthorized" }, 401);
   }
 
@@ -121,17 +123,24 @@ serve(async (req) => {
   }));
 
   // ── Save user message ──
-  await supabase.from("chat_messages").insert({
+  const { error: insertErr } = await supabase.from("chat_messages").insert({
     thread_id: activeThreadId,
     role: "user",
     content: message.trim(),
   });
+
+  if (insertErr) {
+    console.error("Message insert error:", insertErr);
+    return json({ error: "Failed to save message" }, 500);
+  }
 
   // ── Provider config ──
   const AI_PROVIDER = Deno.env.get("AI_PROVIDER") ?? "openai";
   const AI_MODEL =
     Deno.env.get("AI_MODEL") ??
     (AI_PROVIDER === "anthropic" ? "claude-sonnet-4-20250514" : "gpt-4o");
+
+  console.log("Using provider:", AI_PROVIDER, "model:", AI_MODEL);
 
   const allMessages = [
     ...contextMessages,
@@ -144,7 +153,7 @@ serve(async (req) => {
     if (AI_PROVIDER === "anthropic") {
       const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
       if (!ANTHROPIC_API_KEY) {
-        return json({ error: "Server misconfiguration" }, 500);
+        return json({ error: "Server misconfiguration: missing ANTHROPIC_API_KEY" }, 500);
       }
       aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -163,7 +172,7 @@ serve(async (req) => {
     } else {
       const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
       if (!OPENAI_API_KEY) {
-        return json({ error: "Server misconfiguration" }, 500);
+        return json({ error: "Server misconfiguration: missing OPENAI_API_KEY" }, 500);
       }
       aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -186,7 +195,7 @@ serve(async (req) => {
   if (!aiResponse.ok) {
     const text = await aiResponse.text();
     console.error("AI provider error:", aiResponse.status, text);
-    return json({ error: "AI provider error" }, 502);
+    return json({ error: `AI provider error: ${aiResponse.status}` }, 502);
   }
 
   // ── Stream response ──
@@ -271,4 +280,9 @@ serve(async (req) => {
       Connection: "keep-alive",
     },
   });
+
+  } catch (err) {
+    console.error("Unhandled error in chat function:", err);
+    return json({ error: String(err) }, 500);
+  }
 });
