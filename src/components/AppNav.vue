@@ -76,4 +76,29 @@ async function handleSignOut() {
 .link-btn:hover {
   color: #1a1a1a;
 }
+
+@media (max-width: 640px) {
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-bottom: none;
+    border-top: 1px solid #e5e5e5;
+    padding: 0.5rem 0.75rem;
+    z-index: 100;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.06);
+  }
+  .brand {
+    display: none;
+  }
+  .nav-inner {
+    justify-content: center;
+  }
+  .links {
+    gap: 1.25rem;
+    font-size: 0.85rem;
+  }
+}
 </style>

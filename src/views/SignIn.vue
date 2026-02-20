@@ -119,6 +119,18 @@ function handleOAuth(provider: OAuthProvider) {
   background: #fff;
   color: #1a1a1a;
 }
+
+@media (max-width: 640px) {
+  .form {
+    max-width: 100%;
+  }
+  .alt-actions {
+    flex-wrap: wrap;
+  }
+  .oauth {
+    flex-wrap: wrap;
+  }
+}
 .error {
   color: #d32f2f;
 }

@@ -66,4 +66,10 @@ async function handleSubmit() {
 .success {
   color: #2e7d32;
 }
+
+@media (max-width: 640px) {
+  .form {
+    max-width: 100%;
+  }
+}
 </style>

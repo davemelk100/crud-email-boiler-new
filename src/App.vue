@@ -18,7 +18,7 @@ import AppNav from "@/components/AppNav.vue";
   padding: 0;
 }
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Nunito Sans', system-ui, -apple-system, sans-serif;
   color: #1a1a1a;
   background: #fafafa;
 }
@@ -26,5 +26,12 @@ body {
   max-width: 720px;
   margin: 2rem auto;
   padding: 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .container {
+    margin: 1.5rem auto;
+    padding-bottom: 4rem;
+  }
 }
 </style>
