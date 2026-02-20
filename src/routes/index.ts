@@ -8,6 +8,7 @@ import ForgotPassword from "@/views/ForgotPassword.vue";
 import Dashboard from "@/views/Dashboard.vue";
 import Contact from "@/views/Contact.vue";
 import Setup from "@/views/Setup.vue";
+import Chat from "@/views/Chat.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,6 +21,12 @@ const router = createRouter({
       path: "/dashboard",
       name: "Dashboard",
       component: Dashboard,
+      beforeEnter: authGuard,
+    },
+    {
+      path: "/chat",
+      name: "Chat",
+      component: Chat,
       beforeEnter: authGuard,
     },
     { path: "/contact", name: "Contact", component: Contact },
