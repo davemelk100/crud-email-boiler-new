@@ -16,7 +16,7 @@ export const useAuthStore = defineStore("auth", () => {
     session.value = data.session;
     user.value = data.session?.user ?? null;
 
-    authService.onAuthStateChange((_event, s) => {
+    authService.onAuthStateChange(async (_event, s) => {
       session.value = s;
       user.value = s?.user ?? null;
     });
