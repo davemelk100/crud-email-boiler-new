@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted } from "vue";
+import { ref, watch, nextTick, onMounted, computed } from "vue";
 import { useChatStore } from "@/stores/chatStore";
+import { useAuthStore } from "@/stores/authStore";
 
 const chat = useChatStore();
+const auth = useAuthStore();
 const input = ref("");
 const messagesEl = ref<HTMLElement | null>(null);
 const sidebarOpen = ref(false);
+
+const isAuthenticated = computed(() => auth.isAuthenticated);
 
 onMounted(() => {
   chat.loadThreads();
@@ -50,12 +54,12 @@ function handleNewThread() {
 <template>
   <div class="chat-layout">
     <!-- Mobile sidebar toggle -->
-    <button class="sidebar-toggle" @click="sidebarOpen = !sidebarOpen">
+    <button v-if="isAuthenticated" class="sidebar-toggle" @click="sidebarOpen = !sidebarOpen">
       {{ sidebarOpen ? "\u2715" : "\u2630" }}
     </button>
 
-    <!-- Thread sidebar -->
-    <aside class="sidebar" :class="{ open: sidebarOpen }">
+    <!-- Thread sidebar (authenticated only) -->
+    <aside v-if="isAuthenticated" class="sidebar" :class="{ open: sidebarOpen }">
       <button class="new-chat-btn" @click="handleNewThread">+ New Chat</button>
       <div class="thread-list">
         <div
@@ -112,7 +116,14 @@ function handleNewThread() {
         </div>
       </div>
 
-      <div class="input-area">
+      <!-- Login prompt when guest limit reached -->
+      <div v-if="chat.requiresAuth" class="auth-prompt">
+        <p>You've used all 4 free messages.</p>
+        <router-link to="/signin" class="signin-link">Sign in to continue chatting</router-link>
+      </div>
+
+      <!-- Normal input area -->
+      <div v-else class="input-area">
         <textarea
           v-model="input"
           placeholder="Type a message..."
@@ -127,6 +138,11 @@ function handleNewThread() {
         >
           Send
         </button>
+      </div>
+
+      <!-- Guest messages remaining -->
+      <div v-if="chat.guestMessagesRemaining !== null && !chat.requiresAuth" class="guest-counter">
+        {{ chat.guestMessagesRemaining }} message{{ chat.guestMessagesRemaining === 1 ? '' : 's' }} remaining
       </div>
     </main>
   </div>
@@ -313,6 +329,34 @@ function handleNewThread() {
 .send-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.auth-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid #ccc;
+  background: #fff;
+  text-align: center;
+}
+.auth-prompt p {
+  margin: 0;
+  color: #555;
+}
+.signin-link {
+  color: #1a1a1a;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.guest-counter {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #999;
+  padding: 0.25rem 0;
+  background: #fff;
 }
 
 @media (max-width: 640px) {

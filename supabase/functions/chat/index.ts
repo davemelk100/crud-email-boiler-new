@@ -47,23 +47,24 @@ serve(async (req) => {
 
   // ── Auth ──
   const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return json({ error: "Missing authorization" }, 401);
-  }
-
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-  const token = authHeader.replace("Bearer ", "");
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser(token);
+  let user: { id: string } | null = null;
+  let isGuest = true;
 
-  if (authError || !user) {
-    console.error("Auth error:", authError);
-    return json({ error: "Unauthorized" }, 401);
+  if (authHeader) {
+    const token = authHeader.replace("Bearer ", "");
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser(token);
+
+    if (!authError && authUser) {
+      user = authUser;
+      isGuest = false;
+    }
   }
 
   // ── Parse body ──
@@ -79,59 +80,64 @@ serve(async (req) => {
     return json({ error: "Message is required" }, 400);
   }
 
-  // ── Thread management ──
-  let activeThreadId = threadId;
+  let activeThreadId: string | undefined = undefined;
+  let contextMessages: { role: string; content: string }[] = [];
 
-  if (!activeThreadId) {
-    const title = message.trim().slice(0, 40);
-    const { data: thread, error: threadErr } = await supabase
-      .from("chat_threads")
-      .insert({ user_id: user.id, title })
-      .select("id")
-      .single();
+  if (!isGuest) {
+    // ── Thread management (authenticated only) ──
+    activeThreadId = threadId;
 
-    if (threadErr || !thread) {
-      console.error("Thread creation error:", threadErr);
-      return json({ error: "Failed to create thread" }, 500);
+    if (!activeThreadId) {
+      const title = message.trim().slice(0, 40);
+      const { data: thread, error: threadErr } = await supabase
+        .from("chat_threads")
+        .insert({ user_id: user!.id, title })
+        .select("id")
+        .single();
+
+      if (threadErr || !thread) {
+        console.error("Thread creation error:", threadErr);
+        return json({ error: "Failed to create thread" }, 500);
+      }
+      activeThreadId = thread.id;
+    } else {
+      // Verify thread belongs to user
+      const { data: existing } = await supabase
+        .from("chat_threads")
+        .select("id")
+        .eq("id", activeThreadId)
+        .eq("user_id", user!.id)
+        .single();
+
+      if (!existing) {
+        return json({ error: "Thread not found" }, 404);
+      }
     }
-    activeThreadId = thread.id;
-  } else {
-    // Verify thread belongs to user
-    const { data: existing } = await supabase
-      .from("chat_threads")
-      .select("id")
-      .eq("id", activeThreadId)
-      .eq("user_id", user.id)
-      .single();
 
-    if (!existing) {
-      return json({ error: "Thread not found" }, 404);
+    // ── Fetch context (last 50 messages) ──
+    const { data: history } = await supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("thread_id", activeThreadId)
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    contextMessages = (history ?? []).map((m: { role: string; content: string }) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    // ── Save user message ──
+    const { error: insertErr } = await supabase.from("chat_messages").insert({
+      thread_id: activeThreadId,
+      role: "user",
+      content: message.trim(),
+    });
+
+    if (insertErr) {
+      console.error("Message insert error:", insertErr);
+      return json({ error: "Failed to save message" }, 500);
     }
-  }
-
-  // ── Fetch context (last 50 messages) ──
-  const { data: history } = await supabase
-    .from("chat_messages")
-    .select("role, content")
-    .eq("thread_id", activeThreadId)
-    .order("created_at", { ascending: true })
-    .limit(50);
-
-  const contextMessages = (history ?? []).map((m: { role: string; content: string }) => ({
-    role: m.role,
-    content: m.content,
-  }));
-
-  // ── Save user message ──
-  const { error: insertErr } = await supabase.from("chat_messages").insert({
-    thread_id: activeThreadId,
-    role: "user",
-    content: message.trim(),
-  });
-
-  if (insertErr) {
-    console.error("Message insert error:", insertErr);
-    return json({ error: "Failed to save message" }, 500);
   }
 
   // ── Provider config ──
@@ -252,17 +258,19 @@ serve(async (req) => {
           }
         }
 
-        // Save assistant message
-        await supabase.from("chat_messages").insert({
-          thread_id: activeThreadId,
-          role: "assistant",
-          content: fullContent,
-          provider: AI_PROVIDER,
-          model: AI_MODEL,
-        });
+        if (!isGuest) {
+          // Save assistant message (authenticated only)
+          await supabase.from("chat_messages").insert({
+            thread_id: activeThreadId,
+            role: "assistant",
+            content: fullContent,
+            provider: AI_PROVIDER,
+            model: AI_MODEL,
+          });
+        }
 
         send(
-          JSON.stringify({ done: true, threadId: activeThreadId })
+          JSON.stringify(isGuest ? { done: true } : { done: true, threadId: activeThreadId })
         );
         controller.close();
       } catch (err) {

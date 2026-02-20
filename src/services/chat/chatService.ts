@@ -54,18 +54,21 @@ export const chatService = {
     message: string,
     threadId?: string
   ): AsyncGenerator<
-    { type: "content"; content: string } | { type: "done"; threadId: string }
+    { type: "content"; content: string } | { type: "done"; threadId?: string }
   > {
     const session = (await supabase.auth.getSession()).data.session;
-    if (!session) throw new Error("Not authenticated");
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      apikey: env.supabaseAnonKey,
+    };
+    if (session) {
+      headers.Authorization = `Bearer ${session.access_token}`;
+    }
 
     const res = await fetch(`${env.supabaseUrl}/functions/v1/chat`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: env.supabaseAnonKey,
-        Authorization: `Bearer ${session.access_token}`,
-      },
+      headers,
       body: JSON.stringify({ message, threadId }),
     });
 

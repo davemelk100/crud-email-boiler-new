@@ -28,9 +28,9 @@ async function handleSignOut() {
         <router-link to="/setup">Readme</router-link>
         <router-link to="/contact">Contact</router-link>
 
+        <router-link to="/chat">Chat</router-link>
         <template v-if="auth.isAuthenticated">
           <router-link to="/dashboard">Dashboard</router-link>
-          <router-link to="/chat">Chat</router-link>
         </template>
 
         <div class="right-links">

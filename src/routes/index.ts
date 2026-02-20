@@ -27,7 +27,6 @@ const router = createRouter({
       path: "/chat",
       name: "Chat",
       component: Chat,
-      beforeEnter: authGuard,
     },
     { path: "/contact", name: "Contact", component: Contact },
     { path: "/setup", name: "Setup", component: Setup },

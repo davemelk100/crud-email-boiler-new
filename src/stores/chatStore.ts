@@ -5,6 +5,15 @@ import {
   type ChatThread,
   type ChatMessage,
 } from "@/services/chat/chatService";
+import { useAuthStore } from "@/stores/authStore";
+
+const GUEST_LIMIT = 4;
+const GUEST_COUNT_KEY = "chat_guest_count";
+
+function loadGuestCount(): number {
+  const stored = localStorage.getItem(GUEST_COUNT_KEY);
+  return stored ? parseInt(stored, 10) || 0 : 0;
+}
 
 export const useChatStore = defineStore("chat", () => {
   const threads = ref<ChatThread[]>([]);
@@ -15,12 +24,27 @@ export const useChatStore = defineStore("chat", () => {
   const isLoadingThreads = ref(false);
   const isLoadingMessages = ref(false);
   const error = ref("");
+  const guestMessageCount = ref(loadGuestCount());
 
   const activeThread = computed(() =>
     threads.value.find((t) => t.id === activeThreadId.value) ?? null
   );
 
+  const requiresAuth = computed(() => {
+    const auth = useAuthStore();
+    return !auth.isAuthenticated && guestMessageCount.value >= GUEST_LIMIT;
+  });
+
+  const guestMessagesRemaining = computed(() => {
+    const auth = useAuthStore();
+    if (auth.isAuthenticated) return null;
+    return Math.max(0, GUEST_LIMIT - guestMessageCount.value);
+  });
+
   async function loadThreads() {
+    const auth = useAuthStore();
+    if (!auth.isAuthenticated) return;
+
     isLoadingThreads.value = true;
     error.value = "";
     try {
@@ -54,7 +78,17 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   async function sendMessage(content: string) {
+    const auth = useAuthStore();
     error.value = "";
+
+    if (!auth.isAuthenticated) {
+      if (guestMessageCount.value >= GUEST_LIMIT) {
+        error.value = "You've used all free messages. Please sign in to continue.";
+        return;
+      }
+      guestMessageCount.value++;
+      localStorage.setItem(GUEST_COUNT_KEY, String(guestMessageCount.value));
+    }
 
     // Optimistic: add user message immediately
     const optimisticMsg: ChatMessage = {
@@ -84,7 +118,7 @@ export const useChatStore = defineStore("chat", () => {
           // Push completed assistant message
           messages.value.push({
             id: crypto.randomUUID(),
-            thread_id: event.threadId,
+            thread_id: event.threadId ?? "",
             role: "assistant",
             content: streamingContent.value,
             provider: null,
@@ -93,11 +127,13 @@ export const useChatStore = defineStore("chat", () => {
           });
           streamingContent.value = "";
 
-          // If new thread, update state and reload threads
-          if (!activeThreadId.value) {
-            activeThreadId.value = event.threadId;
+          if (event.threadId) {
+            // Authenticated flow: update thread state
+            if (!activeThreadId.value) {
+              activeThreadId.value = event.threadId;
+            }
+            await loadThreads();
           }
-          await loadThreads();
         }
       }
     } catch (e: unknown) {
@@ -131,6 +167,9 @@ export const useChatStore = defineStore("chat", () => {
     isLoadingMessages,
     error,
     activeThread,
+    requiresAuth,
+    guestMessagesRemaining,
+    guestMessageCount,
     loadThreads,
     selectThread,
     startNewThread,
