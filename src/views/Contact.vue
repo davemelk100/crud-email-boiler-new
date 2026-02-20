@@ -25,11 +25,9 @@ async function handleSubmit() {
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "apikey": env.supabaseAnonKey,
+      "Authorization": `Bearer ${auth.session?.access_token ?? env.supabaseAnonKey}`,
     };
-
-    if (auth.session?.access_token) {
-      headers["Authorization"] = `Bearer ${auth.session.access_token}`;
-    }
 
     const res = await fetch(`${env.supabaseUrl}/functions/v1/contact`, {
       method: "POST",

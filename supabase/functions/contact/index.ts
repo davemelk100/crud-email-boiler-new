@@ -78,12 +78,12 @@ serve(async (req) => {
     return json({ error: "Invalid email address" }, 400);
   }
 
-  const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   const CONTACT_TO_EMAIL = Deno.env.get("CONTACT_TO_EMAIL");
   const CONTACT_FROM_EMAIL = Deno.env.get("CONTACT_FROM_EMAIL");
 
-  if (!SENDGRID_API_KEY || !CONTACT_TO_EMAIL || !CONTACT_FROM_EMAIL) {
-    console.error("Missing SendGrid env vars");
+  if (!RESEND_API_KEY || !CONTACT_TO_EMAIL || !CONTACT_FROM_EMAIL) {
+    console.error("Missing Resend env vars");
     return json({ error: "Server misconfiguration" }, 500);
   }
 
@@ -92,41 +92,36 @@ serve(async (req) => {
   const safeSubject = escapeHtml(subject.trim());
   const safeMessage = escapeHtml(message.trim());
 
-  const sgPayload = {
-    personalizations: [{ to: [{ email: CONTACT_TO_EMAIL }] }],
-    from: { email: CONTACT_FROM_EMAIL },
-    reply_to: { email: email.trim(), name: name.trim() },
+  const resendPayload = {
+    from: CONTACT_FROM_EMAIL,
+    to: [CONTACT_TO_EMAIL],
+    reply_to: email.trim(),
     subject: `Contact: ${safeSubject}`,
-    content: [
-      {
-        type: "text/html",
-        value: `<p><strong>From:</strong> ${safeName} (${safeEmail})</p>
+    html: `<p><strong>From:</strong> ${safeName} (${safeEmail})</p>
 <p><strong>Subject:</strong> ${safeSubject}</p>
 <hr/>
 <p>${safeMessage.replace(/\n/g, "<br/>")}</p>`,
-      },
-    ],
   };
 
   try {
-    const sgRes = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(sgPayload),
+      body: JSON.stringify(resendPayload),
     });
 
-    if (!sgRes.ok) {
-      const text = await sgRes.text();
-      console.error("SendGrid error:", sgRes.status, text);
+    if (!resendRes.ok) {
+      const text = await resendRes.text();
+      console.error("Resend error:", resendRes.status, text);
       return json({ error: "Failed to send email" }, 502);
     }
 
     return json({ ok: true });
   } catch (err) {
-    console.error("SendGrid fetch error:", err);
+    console.error("Resend fetch error:", err);
     return json({ error: "Failed to send email" }, 502);
   }
 });

@@ -1,6 +1,6 @@
 # CRUD Email Boiler
 
-Production-ready scaffold: **Vue 3 + Vite + TypeScript + Pinia + Vue Router** SPA deployed statically to **Netlify**, with **Supabase** (Auth, Postgres, RLS, Edge Functions) as the only backend. Email sent via **SendGrid** from a Supabase Edge Function.
+Production-ready scaffold: **Vue 3 + Vite + TypeScript + Pinia + Vue Router** SPA deployed statically to **Netlify**, with **Supabase** (Auth, Postgres, RLS, Edge Functions) as the only backend. Email sent via **Resend** from a Supabase Edge Function.
 
 ---
 
@@ -122,10 +122,10 @@ This prints your local `anon key` and `API URL` — copy them into `.env`.
 supabase functions serve contact --no-verify-jwt
 ```
 
-For SendGrid to work locally, set env vars:
+For Resend to work locally, set env vars:
 
 ```bash
-supabase secrets set SENDGRID_API_KEY=your_key
+supabase secrets set RESEND_API_KEY=your_key
 supabase secrets set CONTACT_TO_EMAIL=you@example.com
 supabase secrets set CONTACT_FROM_EMAIL=noreply@example.com
 ```
@@ -155,7 +155,7 @@ Open http://localhost:5173
 Set via CLI:
 
 ```bash
-supabase secrets set SENDGRID_API_KEY=...
+supabase secrets set RESEND_API_KEY=...
 supabase secrets set CONTACT_TO_EMAIL=...
 supabase secrets set CONTACT_FROM_EMAIL=...
 ```
@@ -173,7 +173,7 @@ supabase functions deploy contact
 ### 2. Set production secrets
 
 ```bash
-supabase secrets set SENDGRID_API_KEY=...
+supabase secrets set RESEND_API_KEY=...
 supabase secrets set CONTACT_TO_EMAIL=...
 supabase secrets set CONTACT_FROM_EMAIL=...
 ```
@@ -234,5 +234,5 @@ Protected routes use the `authGuard` in `src/routes/guards.ts`.
 - Honeypot field check
 - In-memory rate limiting (5 req/min per IP)
 - HTML escaping
-- Sends via SendGrid `v3/mail/send`
+- Sends via Resend `v3/mail/send`
 - Returns `{ ok: true }` on success
